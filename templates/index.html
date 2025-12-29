@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoRemove AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary-green: #2ecc71; --dark-green: #27ae60; --bg-gradient: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            margin: 0; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .card {
+            background: white; padding: 40px; border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            width: 90%; max-width: 450px; text-align: center;
+        }
+
+        .logo-area i { color: var(--primary-green); font-size: 3rem; margin-bottom: 10px; }
+        h1 { color: #2c3e50; margin: 0; font-size: 1.8rem; }
+        p { color: #7f8c8d; margin-bottom: 30px; }
+
+        .upload-box {
+            border: 2px dashed #bdc3c7; background: #f9fdfb;
+            padding: 30px; border-radius: 15px; cursor: pointer;
+            transition: 0.3s; display: block; margin-bottom: 25px;
+        }
+
+        .upload-box:hover { border-color: var(--primary-green); background: #f0fff4; }
+
+        .btn {
+            background: var(--primary-green); color: white; border: none;
+            width: 100%; padding: 15px; border-radius: 12px;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .btn:hover { background: var(--dark-green); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+
+        #loader { display: none; margin: 20px 0; font-weight: bold; color: var(--dark-green); }
+
+        #resultContainer { display: none; margin-top: 25px; }
+        #resultImg { 
+            width: 100%; border-radius: 12px; 
+            background-image: linear-gradient(45deg, #eee 25%, transparent 25%), linear-gradient(-45deg, #eee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eee 75%), linear-gradient(-45deg, transparent 75%, #eee 75%);
+            background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="logo-area"><i class="fa-solid fa-leaf"></i></div>
+        <h1>EcoRemove AI</h1>
+        <p>Premium Background Removal</p>
+
+        <label class="upload-box" id="dropZone">
+            <input type="file" id="fileInput" hidden accept="image/*">
+            <i class="fa-solid fa-cloud-arrow-up fa-2x" style="color: #95a5a6;"></i>
+            <p id="fileName">Select or Drop Image</p>
+        </label>
+
+        <button class="btn" onclick="processImage()">Remove Background</button>
+
+        <div id="loader"><i class="fas fa-spinner fa-spin"></i> Processing AI...</div>
+
+        <div id="resultContainer">
+            <img id="resultImg" src="">
+            <br>
+            <a id="downloadBtn" href="#" download="removed_bg.png" style="display:inline-block; margin-top:15px; color: var(--dark-green); font-weight:bold; text-decoration:none;">
+                <i class="fa-solid fa-download"></i> Save Image
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+
+        fileInput.onchange = () => {
+            if (fileInput.files[0]) fileName.innerText = fileInput.files[0].name;
+        };
+
+        async function processImage() {
+            if (!fileInput.files[0]) return alert("Please pick a file first!");
+
+            document.getElementById('loader').style.display = "block";
+            document.getElementById('resultContainer').style.display = "none";
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/remove-bg', { method: 'POST', body: formData });
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                document.getElementById('resultImg').src = url;
+                document.getElementById('downloadBtn').href = url;
+                document.getElementById('resultContainer').style.display = "block";
+            } catch (e) {
+                alert("Error connecting to server.");
+            } finally {
+                document.getElementById('loader').style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
