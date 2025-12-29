@@ -1,31 +1,28 @@
-from flask import Flask, request, send_file
-from rembg import remove
-from PIL import Image
 import io
+from flask import Flask, render_template, request, send_file
+from rembg import remove, new_session
+from PIL import Image
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET'])
+# This part is key for Render Free Tier:
+session = new_session("u2netp") 
+
+@app.route('/')
 def index():
-    return "Background Remover API is Running!"
+    return render_template('index.html')
 
 @app.route('/remove-bg', methods=['POST'])
 def remove_bg():
-    if 'image' not in request.files:
-        return {"error": "No image provided"}, 400
+    if 'file' not in request.files:
+        return "No file", 400
     
-    file = request.files['image']
-    input_image = Image.open(file.stream)
+    file = request.files['file'].read()
     
-    # Remove background
-    output_image = remove(input_image)
+    # Use the 'session' we created above
+    output = remove(file, session=session)
     
-    # Save to byte stream
-    img_io = io.BytesIO()
-    output_image.save(img_io, 'PNG')
-    img_io.seek(0)
-    
-    return send_file(img_io, mimetype='image/png')
+    return send_file(io.BytesIO(output), mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
